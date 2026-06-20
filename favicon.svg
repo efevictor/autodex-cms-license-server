@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#000000"/>
+  <text x="16" y="13" font-family="Arial Black,sans-serif" font-size="9" font-weight="900" fill="#ffffff" text-anchor="middle">AUTO</text>
+  <text x="16" y="24" font-family="Arial Black,sans-serif" font-size="11" font-weight="900" fill="#d00000" text-anchor="middle">DEX</text>
+</svg>
