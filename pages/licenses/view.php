@@ -126,9 +126,21 @@ $status_badge  = ['active' => 'badge-active', 'suspended' => 'badge-suspended', 
                     <dt class="col-sm-4 text-muted fw-normal">Plan</dt>
                     <dd class="col-sm-8"><?= ucfirst(e($license['plan'])) ?></dd>
 
-                    <dt class="col-sm-4 text-muted fw-normal">Primary Domain</dt>
+                    <dt class="col-sm-4 text-muted fw-normal">Registered Domain</dt>
                     <dd class="col-sm-8">
-                        <?= $license['activated_domain'] ? '<strong>' . e($license['activated_domain']) . '</strong>' : '<span class="text-muted">Not activated yet</span>' ?>
+                        <?php if ($license['activated_domain']): ?>
+                            <span style="display:inline-flex;align-items:center;gap:.35rem">
+                                <i class="ph ph-lock-simple" style="color:#d00000"></i>
+                                <strong><?= e($license['activated_domain']) ?></strong>
+                            </span>
+                            <?php if ((int)$license['activations'] === 0): ?>
+                                <span class="badge bg-light text-muted border ms-1" style="font-size:.65rem">Pre-registered — not yet activated</span>
+                            <?php else: ?>
+                                <span class="badge-active ms-1" style="font-size:.65rem">Active</span>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <span class="text-muted">Not yet bound — first install will lock the domain</span>
+                        <?php endif; ?>
                     </dd>
 
                     <?php if (!empty($extra_domains)): ?>

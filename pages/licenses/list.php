@@ -111,7 +111,17 @@ require __DIR__ . '/../../layout/header.php';
                         <div class="text-muted" style="font-size:.74rem"><?= e($l['purchase_email']) ?></div>
                     </td>
                     <td><span class="badge bg-light text-dark border" style="font-size:.7rem"><?= ucfirst(e($l['plan'])) ?></span></td>
-                    <td class="small text-muted"><?= $l['activated_domain'] ? e($l['activated_domain']) : '—' ?></td>
+                    <td class="small">
+                        <?php if ($l['activated_domain']): ?>
+                            <i class="ph ph-lock-simple" style="color:#d00000;font-size:.75rem"></i>
+                            <span class="fw-semibold"><?= e($l['activated_domain']) ?></span>
+                            <?php if ((int)$l['activations'] === 0): ?>
+                                <span class="text-muted" style="font-size:.7rem">(pre-reg)</span>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <span class="text-muted">—</span>
+                        <?php endif; ?>
+                    </td>
                     <td><span class="badge-<?= e($l['status']) ?>"><?= ucfirst(e($l['status'])) ?></span></td>
                     <?php $exp_ts = $l['expires_at'] ? strtotime($l['expires_at']) : false; ?>
                     <td class="small text-muted"><?= ($exp_ts && $exp_ts > 0) ? date('d M Y', $exp_ts) : 'Lifetime' ?></td>

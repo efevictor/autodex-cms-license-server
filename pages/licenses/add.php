@@ -19,6 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $notes      = trim($_POST['notes']     ?? '');
     $expires_raw = trim($_POST['expires_at'] ?? '');
     $custom_key  = trim($_POST['custom_key'] ?? '');
+    $domain_raw  = strtolower(trim($_POST['registered_domain'] ?? ''));
+    $domain      = $domain_raw ? preg_replace('/^www\./', '', $domain_raw) : null;
 
     // Normalize expiry date to full datetime string MySQL will accept reliably
     $expires = null;
@@ -45,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             ls_run(
-                "INSERT INTO licenses (product_id, license_key, purchase_email, buyer_name, plan, max_domains, expires_at, order_ref, notes)
-                 VALUES (:pid, :key, :email, :name, :plan, :maxd, :exp, :ref, :notes)",
+                "INSERT INTO licenses (product_id, license_key, purchase_email, buyer_name, plan, max_domains, activated_domain, expires_at, order_ref, notes)
+                 VALUES (:pid, :key, :email, :name, :plan, :maxd, :dom, :exp, :ref, :notes)",
                 [
                     ':pid'   => $product_id,
                     ':key'   => $key,
@@ -54,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':name'  => $name ?: null,
                     ':plan'  => $plan,
                     ':maxd'  => $max_dom,
+                    ':dom'   => $domain,
                     ':exp'   => $expires,
                     ':ref'   => $order_ref ?: null,
                     ':notes' => $notes ?: null,
@@ -157,6 +160,13 @@ require __DIR__ . '/../../layout/header.php';
                         <input type="date" name="expires_at" class="form-control"
                                value="<?= e($_POST['expires_at'] ?? '') ?>">
                         <div class="form-text">Leave blank for a lifetime license.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Registered Domain <span class="text-muted fw-normal">(optional — locks license to this domain immediately)</span></label>
+                        <input type="text" name="registered_domain" class="form-control"
+                               value="<?= e($_POST['registered_domain'] ?? '') ?>"
+                               placeholder="e.g. dealership.com (no www, no https)">
+                        <div class="form-text">If provided, only this domain can ever activate the license.</div>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Custom Key <span class="text-muted fw-normal">(optional)</span></label>

@@ -87,7 +87,7 @@ if ($license['expires_at'] && ($exp = strtotime($license['expires_at'])) && $exp
 $clean_domain = preg_replace('/^www\./', '', $domain);
 
 if (empty($license['activated_domain'])) {
-    // First activation — bind to this domain
+    // First activation — no domain pre-registered, bind to this domain now
     $pdo->prepare("
         UPDATE licenses
         SET activated_domain = :domain, activated_at = NOW(), activations = activations + 1
@@ -99,14 +99,20 @@ if (empty($license['activated_domain'])) {
 } else {
     $bound = preg_replace('/^www\./', '', $license['activated_domain']);
 
-    if ($bound !== $clean_domain) {
-        // Already bound to a different domain
-        // Allow if within the allowed_domains count (for multi-site licenses)
+    if ($bound === $clean_domain) {
+        // Domain matches the registered/bound domain
+        if ((int)$license['activations'] === 0) {
+            // Pre-registered domain — record first real activation now
+            $pdo->prepare("UPDATE licenses SET activated_at = NOW(), activations = 1 WHERE id = :id")
+                ->execute([':id' => $license['id']]);
+            log_activation($pdo, $license['id'], $clean_domain, $email, 'activated');
+        }
+    } else {
+        // Different domain — check if multi-site license has room
         $extra = json_decode($license['extra_domains'] ?? '[]', true) ?: [];
 
         if (!in_array($clean_domain, $extra, true)) {
             if (count($extra) < (int)($license['max_domains'] - 1)) {
-                // Add this domain as an additional allowed domain
                 $extra[] = $clean_domain;
                 $pdo->prepare("UPDATE licenses SET extra_domains=:d, activations=activations+1 WHERE id=:id")
                     ->execute([':d' => json_encode($extra), ':id' => $license['id']]);
@@ -114,8 +120,7 @@ if (empty($license['activated_domain'])) {
             } else {
                 exit(json_encode([
                     'valid'   => false,
-                    'message' => 'This license is already activated on ' . htmlspecialchars($bound) . '. '
-                               . 'To use it on a different domain, deactivate it from your account first.',
+                    'message' => 'This license is registered to ' . htmlspecialchars($bound) . ' and cannot be used on ' . htmlspecialchars($clean_domain) . '. Contact support if you need to transfer it.',
                 ]));
             }
         }
