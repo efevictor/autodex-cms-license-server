@@ -111,7 +111,8 @@ function ls_url(string $page = '', array $params = []): string
         $path = $page; // dashboard, login, logout, licenses, settings, changelog
     }
 
-    $url = '/' . $path;
+    $base = defined('LS_BASE') ? LS_BASE : '';
+    $url = $base . '/' . $path;
     if ($params) { $url .= '?' . http_build_query($params); }
     return $url;
 }

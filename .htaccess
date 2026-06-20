@@ -10,6 +10,15 @@ Options -Indexes
     RewriteEngine On
     RewriteBase /
 
+    RewriteRule ^autodesk-license-server/login$              autodesk-license-server/index.php?p=login [L,QSA]
+    RewriteRule ^autodesk-license-server/logout$             autodesk-license-server/index.php?p=logout [L,QSA]
+    RewriteRule ^autodesk-license-server/dashboard$          autodesk-license-server/index.php?p=dashboard [L,QSA]
+    RewriteRule ^autodesk-license-server/licenses/add$       autodesk-license-server/index.php?p=licenses.add [L,QSA]
+    RewriteRule ^autodesk-license-server/licenses/([0-9]+)$  autodesk-license-server/index.php?p=licenses.view&id=$1 [L,QSA]
+    RewriteRule ^autodesk-license-server/licenses$           autodesk-license-server/index.php?p=licenses [L,QSA]
+    RewriteRule ^autodesk-license-server/settings$           autodesk-license-server/index.php?p=settings [L,QSA]
+    RewriteRule ^autodesk-license-server/changelog$          autodesk-license-server/index.php?p=changelog [L,QSA]
+
     RewriteRule ^login$              index.php?p=login [L,QSA]
     RewriteRule ^logout$             index.php?p=logout [L,QSA]
     RewriteRule ^dashboard$          index.php?p=dashboard [L,QSA]

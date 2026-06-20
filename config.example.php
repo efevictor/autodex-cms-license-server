@@ -19,3 +19,7 @@ define('LS_ADMIN_PASS_HASH', 'REPLACE_WITH_HASH');
 define('LS_URL',     'https://license.evodesignco.com');
 define('LS_PRODUCT', 'AutoDex');
 define('LS_SESSION', 'ls_admin_sess');
+
+// Base path for URLs — empty on production (root domain), set to subfolder for local dev
+// e.g. '' for license.evodesignco.com, '/autodesk-license-server' for localhost
+define('LS_BASE', '');
