@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/wyeebsml/public_html/license.evodesignco.com
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/rsync -av --exclude='config.php' . $DEPLOYPATH/

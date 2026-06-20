@@ -32,6 +32,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'update_notes') {
         ls_run("UPDATE licenses SET notes=:n WHERE id=:id", [':n' => trim($_POST['notes'] ?? ''), ':id' => $id]);
         flash_set('success', 'Notes updated.');
+    } elseif ($action === 'change_plan') {
+        $new_plan = trim($_POST['new_plan'] ?? '');
+        $valid_plans = ['standard', 'extended', 'developer'];
+        if (!in_array($new_plan, $valid_plans, true)) {
+            flash_set('error', 'Invalid plan selected.');
+        } elseif ($new_plan === $license['plan']) {
+            flash_set('error', 'License is already on that plan.');
+        } else {
+            $plan_defaults = ['standard' => 1, 'extended' => 5, 'developer' => 50];
+            $new_max = $plan_defaults[$new_plan];
+
+            // Clear extra domains when downgrading to standard (they'd exceed the new limit)
+            $clear_extras = ($new_plan === 'standard' && !empty($license['extra_domains']));
+
+            if ($clear_extras) {
+                ls_run(
+                    "UPDATE licenses SET plan=:plan, max_domains=:maxd, extra_domains=NULL WHERE id=:id",
+                    [':plan' => $new_plan, ':maxd' => $new_max, ':id' => $id]
+                );
+            } else {
+                ls_run(
+                    "UPDATE licenses SET plan=:plan, max_domains=:maxd WHERE id=:id",
+                    [':plan' => $new_plan, ':maxd' => $new_max, ':id' => $id]
+                );
+            }
+
+            $old_plan = $license['plan'];
+            $direction = array_search($new_plan, $valid_plans) > array_search($old_plan, $valid_plans) ? 'upgraded' : 'downgraded';
+            _ls_log($id, $license['activated_domain'] ?? '-', $license['purchase_email'], "plan_{$direction}_{$old_plan}_to_{$new_plan}");
+            flash_set('success', ucfirst($direction) . " plan from " . ucfirst($old_plan) . " to " . ucfirst($new_plan) . "." . ($clear_extras ? ' Extra domain bindings were cleared.' : ''));
+        }
     }
 
     header('Location: ' . ls_url('licenses.view', ['id' => $id])); exit;
@@ -196,6 +227,31 @@ $status_badge  = ['active' => 'badge-active', 'suspended' => 'badge-suspended', 
                 </form>
                 <?php endif; ?>
             </div>
+        </div>
+
+        <!-- Change Plan -->
+        <div class="ls-card mb-4 p-4">
+            <h6 class="fw-bold mb-3">Change Plan</h6>
+            <form method="POST" onsubmit="return confirm('Change plan for this license? This takes effect immediately.')">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="change_plan">
+                <div class="mb-3">
+                    <label class="form-label small text-muted">Current Plan</label>
+                    <div class="fw-semibold"><?= ucfirst(e($license['plan'])) ?> <span class="text-muted fw-normal small">(<?= (int)$license['max_domains'] ?> domain<?= $license['max_domains'] != 1 ? 's' : '' ?>)</span></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-muted" for="new_plan">New Plan</label>
+                    <select name="new_plan" id="new_plan" class="form-select form-select-sm">
+                        <option value="standard"  <?= $license['plan'] === 'standard'  ? 'selected' : '' ?>>Standard — 1 domain</option>
+                        <option value="extended"  <?= $license['plan'] === 'extended'  ? 'selected' : '' ?>>Extended — up to 5 domains</option>
+                        <option value="developer" <?= $license['plan'] === 'developer' ? 'selected' : '' ?>>Developer — up to 50 domains</option>
+                    </select>
+                    <div class="form-text small">Max domains will be set automatically. Downgrading to Standard clears extra domain bindings.</div>
+                </div>
+                <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="ph ph-arrows-down-up me-1"></i> Apply Plan Change
+                </button>
+            </form>
         </div>
 
         <!-- Notes -->
