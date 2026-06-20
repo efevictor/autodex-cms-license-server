@@ -1,6 +1,6 @@
 <?php
 /**
- * AutoDesk CMS — License Server Configuration
+ * AutoDex — Dealership CMS License Server Configuration
  * Copy this file to config.php and fill in your values.
  * NEVER commit config.php to git.
  */
@@ -17,5 +17,5 @@ define('LS_ADMIN_PASS_HASH', 'REPLACE_WITH_HASH');
 
 // The public URL of this license server (no trailing slash)
 define('LS_URL',     'https://license.evodesignco.com');
-define('LS_PRODUCT', 'AutoDesk CMS');
+define('LS_PRODUCT', 'AutoDex');
 define('LS_SESSION', 'ls_admin_sess');

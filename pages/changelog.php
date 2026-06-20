@@ -51,7 +51,7 @@ require __DIR__ . '/../layout/header.php';
                 <?php foreach ($versions as $i => $v): ?>
                 <div class="d-flex gap-3 <?= $i < count($versions) - 1 ? 'mb-4 pb-4 border-bottom' : '' ?>">
                     <div class="flex-shrink-0 text-center" style="width:80px">
-                        <div class="fw-bold" style="font-size:.9rem;color:#1a1e3a"><?= e($v['version']) ?></div>
+                        <div class="fw-bold" style="font-size:.9rem;color:#000"><?= e($v['version']) ?></div>
                         <div class="text-muted" style="font-size:.7rem"><?= date('d M Y', strtotime($v['released_at'])) ?></div>
                         <?php if ($i === 0): ?>
                         <span class="badge-active mt-1 d-inline-block">Latest</span>

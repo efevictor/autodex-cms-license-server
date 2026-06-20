@@ -1,5 +1,5 @@
 -- ============================================================
--- AutoDesk CMS — License Server Database Schema
+-- AutoDex — Dealership CMS License Server Database Schema
 -- Host this on your own server, separate from the CMS itself
 -- ============================================================
 
@@ -55,7 +55,7 @@ CREATE TABLE `activation_logs` (
 
 
 -- ── Seed: your product ───────────────────────────────────
-INSERT INTO `products` (`name`, `slug`, `price`) VALUES ('AutoDesk CMS', 'autodesk-cms', 99.00);
+INSERT INTO `products` (`name`, `slug`, `price`) VALUES ('AutoDex', 'autodex', 99.00);
 
 -- ── Admin Settings ───────────────────────────────────────
 CREATE TABLE `settings` (

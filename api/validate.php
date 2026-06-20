@@ -1,6 +1,6 @@
 <?php
 /**
- * AutoDesk CMS — License Validation API
+ * AutoDex — Dealership CMS License Validation API
  * Host this on YOUR server at: https://licenses.yourproduct.com/api/validate
  *
  * This endpoint receives a POST request from the CMS installer and

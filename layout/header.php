@@ -3,13 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= e($page_title ?? 'Dashboard') ?> — License Manager</title>
+    <title><?= e($page_title ?? 'Dashboard') ?> — AutoDex</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
     <style>
         :root {
-            --brand:   #E07B22;
-            --dark:    #1a1e3a;
+            --brand:   #d00000;
+            --dark:    #000000;
+            --accent:  #F5A623;
             --sidebar: 230px;
         }
         body         { background: #f4f5f7; font-family: 'Segoe UI', system-ui, sans-serif; font-size: .9rem; }
@@ -35,7 +36,7 @@
         /* Main area */
         .ls-main     { margin-left: var(--sidebar); padding: 2rem; min-height: 100vh; }
         .ls-topbar   { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; }
-        .ls-title    { font-size: 1.3rem; font-weight: 700; color: #1a1e3a; margin: 0; }
+        .ls-title    { font-size: 1.3rem; font-weight: 700; color: #000; margin: 0; }
 
         /* Cards */
         .ls-card     { background: #fff; border-radius: 12px; border: 1px solid #e8eaf0; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
@@ -44,7 +45,7 @@
 
         /* Stat cards */
         .stat-card   { background: #fff; border-radius: 12px; border: 1px solid #e8eaf0; padding: 1.25rem 1.4rem; }
-        .stat-val    { font-size: 2rem; font-weight: 800; color: #1a1e3a; line-height: 1; }
+        .stat-val    { font-size: 2rem; font-weight: 800; color: #000; line-height: 1; }
         .stat-lbl    { font-size: .75rem; color: #6c757d; font-weight: 500; margin-top: .3rem; }
         .stat-icon   { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; }
 
@@ -64,9 +65,9 @@
         /* Forms */
         .form-label  { font-weight: 600; font-size: .82rem; color: #374151; }
         .form-control, .form-select { font-size: .88rem; border-radius: 8px; border-color: #d1d5db; }
-        .form-control:focus, .form-select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(224,123,34,.15); }
+        .form-control:focus, .form-select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(208,0,0,.15); }
         .btn-brand   { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 600; border-radius: 8px; }
-        .btn-brand:hover { background: #c56b1a; border-color: #c56b1a; color: #fff; }
+        .btn-brand:hover { background: #b30000; border-color: #b30000; color: #fff; }
 
         /* Key display */
         .lic-key     { font-family: monospace; font-size: .88rem; background: #f8f9fb; border: 1px solid #e8eaf0; border-radius: 6px; padding: .3rem .65rem; letter-spacing: .05em; }
@@ -79,8 +80,8 @@
 <!-- Sidebar -->
 <aside class="ls-sidebar">
     <div class="ls-logo">
-        <div class="ls-logo-txt">Auto<span>Desk</span></div>
-        <div class="ls-logo-sub">License Manager</div>
+        <div class="ls-logo-txt">Auto<span>Dex</span></div>
+        <div class="ls-logo-sub">Dealership CMS Licensing</div>
     </div>
 
     <nav class="ls-nav">
@@ -115,10 +116,13 @@
     <div class="ls-user">
         <div class="ls-user-av">A</div>
         <div>
-            <div class="ls-user-name"><?= e(LS_ADMIN_USER) ?></div>
+            <div class="ls-user-name"><?= e(ls_setting('admin_username', LS_ADMIN_USER)) ?></div>
             <div class="ls-user-role">Super Admin</div>
         </div>
         <a href="<?= ls_url('logout') ?>" class="ls-logout" title="Sign Out"><i class="ph ph-sign-out"></i></a>
+    </div>
+    <div style="padding:.6rem 1.2rem;border-top:1px solid rgba(255,255,255,.06);font-size:.6rem;color:rgba(255,255,255,.25);text-align:center">
+        A property of <span style="color:var(--accent);font-weight:600">EvoDesignCo</span>
     </div>
 </aside>
 
