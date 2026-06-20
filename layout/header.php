@@ -96,6 +96,20 @@
         <a href="<?= ls_url('licenses.add') ?>" class="<?= $cur === 'licenses.add' ? 'active' : '' ?>">
             <i class="ph ph-plus-circle"></i> Issue New License
         </a>
+
+        <div class="nav-section">System</div>
+        <a href="<?= ls_url('settings') ?>" class="<?= $cur === 'settings' ? 'active' : '' ?>">
+            <i class="ph ph-gear"></i> Settings
+            <?php
+            $lpc = ls_setting('last_password_change');
+            if ($lpc && (time() - strtotime($lpc)) > (45 * 86400)):
+            ?>
+            <span style="margin-left:auto;background:#ef4444;color:#fff;font-size:.6rem;font-weight:700;padding:.15rem .4rem;border-radius:20px">!</span>
+            <?php endif; ?>
+        </a>
+        <a href="<?= ls_url('changelog') ?>" class="<?= $cur === 'changelog' ? 'active' : '' ?>">
+            <i class="ph ph-clock-counter-clockwise"></i> Changelog
+        </a>
     </nav>
 
     <div class="ls-user">

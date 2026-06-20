@@ -19,6 +19,8 @@ $allowed = [
     'licenses'         => 'pages/licenses/list.php',
     'licenses.add'     => 'pages/licenses/add.php',
     'licenses.view'    => 'pages/licenses/view.php',
+    'settings'         => 'pages/settings.php',
+    'changelog'        => 'pages/changelog.php',
 ];
 
 if (!isset($allowed[$page])) {

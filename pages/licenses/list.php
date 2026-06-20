@@ -54,8 +54,7 @@ require __DIR__ . '/../../layout/header.php';
 </div>
 
 <!-- Filters -->
-<form method="get" action="index.php" class="ls-card p-3 mb-4 d-flex flex-wrap gap-2 align-items-end">
-    <input type="hidden" name="p" value="licenses">
+<form method="get" action="<?= ls_url('licenses') ?>" class="ls-card p-3 mb-4 d-flex flex-wrap gap-2 align-items-end">
     <div>
         <label class="form-label mb-1">Search</label>
         <input type="text" name="q" class="form-control form-control-sm" style="width:220px"
@@ -131,7 +130,7 @@ require __DIR__ . '/../../layout/header.php';
         <div class="text-muted small">Page <?= $pg ?> of <?= $total_pgs ?></div>
         <div class="d-flex gap-1">
             <?php for ($i = max(1, $pg - 2); $i <= min($total_pgs, $pg + 2); $i++): ?>
-            <a href="index.php?p=licenses&pg=<?= $i ?>&q=<?= urlencode($search) ?>&status=<?= urlencode($status) ?>&plan=<?= urlencode($plan) ?>"
+            <a href="<?= ls_url('licenses', ['pg' => $i, 'q' => $search, 'status' => $status, 'plan' => $plan]) ?>"
                class="btn btn-sm <?= $i === $pg ? 'btn-brand' : 'btn-outline-secondary' ?>"><?= $i ?></a>
             <?php endfor; ?>
         </div>

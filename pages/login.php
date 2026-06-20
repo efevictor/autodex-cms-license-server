@@ -9,8 +9,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = trim($_POST['username'] ?? '');
     $pass = $_POST['password'] ?? '';
 
-    if ($user === LS_ADMIN_USER && password_verify($pass, LS_ADMIN_PASS_HASH)) {
+    $db_user = ls_setting('admin_username', LS_ADMIN_USER);
+    $db_hash = ls_setting('admin_pass_hash', LS_ADMIN_PASS_HASH);
+    if ($user === $db_user && password_verify($pass, $db_hash)) {
         $_SESSION['ls_admin'] = $user;
+        unset($_SESSION['ls_expiry_checked'], $_SESSION['ls_pass_expired']);
         session_regenerate_id(true);
         header('Location: ' . ls_url('dashboard')); exit;
     }
@@ -40,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="text-center mb-4">
             <div class="logo">Auto<span>Desk</span></div>
             <div class="text-muted small mt-1">License Manager — Admin</div>
+            <div class="mt-2" style="font-size:.7rem;color:#9ca3af">v<?= e(ls_current_version()) ?></div>
         </div>
 
         <?php if ($error): ?>

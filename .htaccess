@@ -1,0 +1,21 @@
+Options -Indexes
+
+# Protect config.php from direct HTTP access
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    RewriteRule ^login$              index.php?p=login [L,QSA]
+    RewriteRule ^logout$             index.php?p=logout [L,QSA]
+    RewriteRule ^dashboard$          index.php?p=dashboard [L,QSA]
+    RewriteRule ^licenses/add$       index.php?p=licenses.add [L,QSA]
+    RewriteRule ^licenses/([0-9]+)$  index.php?p=licenses.view&id=$1 [L,QSA]
+    RewriteRule ^licenses$           index.php?p=licenses [L,QSA]
+    RewriteRule ^settings$           index.php?p=settings [L,QSA]
+    RewriteRule ^changelog$          index.php?p=changelog [L,QSA]
+</IfModule>

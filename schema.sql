@@ -57,6 +57,32 @@ CREATE TABLE `activation_logs` (
 -- ── Seed: your product ───────────────────────────────────
 INSERT INTO `products` (`name`, `slug`, `price`) VALUES ('AutoDesk CMS', 'autodesk-cms', 99.00);
 
+-- ── Admin Settings ───────────────────────────────────────
+CREATE TABLE `settings` (
+    `key`        VARCHAR(100) NOT NULL,
+    `value`      TEXT             NULL,
+    `updated_at` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `settings` (`key`, `value`) VALUES
+('admin_username',       'admin'),
+('admin_pass_hash',      '$2y$12$HWJqTOpDVz1i7PbqFr0Zue9BXudtx6bpLTqN19Cn4HmNbuIg/wKQK'),
+('last_password_change', NOW());
+
+-- ── Version History ───────────────────────────────────────
+CREATE TABLE `versions` (
+    `id`          SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `version`     VARCHAR(20)       NOT NULL,
+    `notes`       TEXT              NOT NULL,
+    `released_at` TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `versions` (`version`, `notes`) VALUES
+('1.0.0', 'Initial release: license management, activation logs, domain binding.'),
+('1.1.0', 'Plan upgrade/downgrade from license view. Admin settings with username/password change and 60-day expiry enforcement. Version history changelog. Clean URLs.');
+
 -- ── How to add a license after a sale ────────────────────
 -- Run this whenever someone buys:
 --
