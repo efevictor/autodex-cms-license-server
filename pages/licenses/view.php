@@ -146,7 +146,10 @@ $status_badge  = ['active' => 'badge-active', 'suspended' => 'badge-suspended', 
                     <dd class="col-sm-8"><?= $license['activated_at'] ? date('d M Y, H:i', strtotime($license['activated_at'])) : '—' ?></dd>
 
                     <dt class="col-sm-4 text-muted fw-normal">Expires</dt>
-                    <dd class="col-sm-8"><?= $license['expires_at'] ? date('d M Y', strtotime($license['expires_at'])) : 'Lifetime' ?></dd>
+                    <dd class="col-sm-8">
+                        <?php $exp_ts = $license['expires_at'] ? strtotime($license['expires_at']) : false; ?>
+                        <?= ($exp_ts && $exp_ts > 0) ? date('d M Y', $exp_ts) : 'Lifetime' ?>
+                    </dd>
 
                     <dt class="col-sm-4 text-muted fw-normal">Order Ref</dt>
                     <dd class="col-sm-8 text-muted"><?= e($license['order_ref'] ?: '—') ?></dd>

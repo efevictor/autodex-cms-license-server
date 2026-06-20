@@ -78,7 +78,7 @@ if ($license['status'] !== 'active') {
 }
 
 // ── Check expiry ──────────────────────────────────────────
-if ($license['expires_at'] && strtotime($license['expires_at']) < time()) {
+if ($license['expires_at'] && ($exp = strtotime($license['expires_at'])) && $exp > 0 && $exp < time()) {
     $pdo->prepare("UPDATE licenses SET status='expired' WHERE id=:id")->execute([':id' => $license['id']]);
     exit(json_encode(['valid' => false, 'message' => 'This license expired on ' . date('d M Y', strtotime($license['expires_at'])) . '.']));
 }

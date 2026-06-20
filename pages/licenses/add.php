@@ -17,8 +17,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $max_dom    = max(1, (int)($_POST['max_domains'] ?? 1));
     $order_ref  = trim($_POST['order_ref'] ?? '');
     $notes      = trim($_POST['notes']     ?? '');
-    $expires    = trim($_POST['expires_at'] ?? '');
-    $custom_key = trim($_POST['custom_key'] ?? '');
+    $expires_raw = trim($_POST['expires_at'] ?? '');
+    $custom_key  = trim($_POST['custom_key'] ?? '');
+
+    // Normalize expiry date to full datetime string MySQL will accept reliably
+    $expires = null;
+    if ($expires_raw !== '') {
+        $ts = strtotime($expires_raw);
+        if (!$ts || $ts <= time()) {
+            $errors[] = 'Expiry date must be a valid date in the future.';
+        } else {
+            $expires = date('Y-m-d 23:59:59', $ts);
+        }
+    }
 
     if (!$product_id) $errors[] = 'Select a product.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email required.';
@@ -43,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':name'  => $name ?: null,
                     ':plan'  => $plan,
                     ':maxd'  => $max_dom,
-                    ':exp'   => $expires ?: null,
+                    ':exp'   => $expires,
                     ':ref'   => $order_ref ?: null,
                     ':notes' => $notes ?: null,
                 ]

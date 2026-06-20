@@ -113,7 +113,8 @@ require __DIR__ . '/../../layout/header.php';
                     <td><span class="badge bg-light text-dark border" style="font-size:.7rem"><?= ucfirst(e($l['plan'])) ?></span></td>
                     <td class="small text-muted"><?= $l['activated_domain'] ? e($l['activated_domain']) : '—' ?></td>
                     <td><span class="badge-<?= e($l['status']) ?>"><?= ucfirst(e($l['status'])) ?></span></td>
-                    <td class="small text-muted"><?= $l['expires_at'] ? date('d M Y', strtotime($l['expires_at'])) : 'Lifetime' ?></td>
+                    <?php $exp_ts = $l['expires_at'] ? strtotime($l['expires_at']) : false; ?>
+                    <td class="small text-muted"><?= ($exp_ts && $exp_ts > 0) ? date('d M Y', $exp_ts) : 'Lifetime' ?></td>
                     <td class="small text-muted"><?= date('d M Y', strtotime($l['created_at'])) ?></td>
                     <td>
                         <a href="<?= ls_url('licenses.view', ['id' => $l['id']]) ?>"
