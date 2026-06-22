@@ -8,18 +8,22 @@ $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
 
-    $version = trim($_POST['version'] ?? '');
-    $notes   = trim($_POST['notes']   ?? '');
+    $version     = trim($_POST['version']          ?? '');
+    $notes       = trim($_POST['notes']            ?? '');
+    $dl_url      = trim($_POST['download_url']     ?? '');
+    $checksum    = strtolower(trim($_POST['sha256_checksum'] ?? ''));
 
     if (!preg_match('/^\d+\.\d+(\.\d+)?$/', $version)) $errors[] = 'Version must be in format X.Y or X.Y.Z (e.g. 1.2.0).';
     if (strlen($notes) < 5) $errors[] = 'Please enter release notes (min. 5 characters).';
+    if ($dl_url && !filter_var($dl_url, FILTER_VALIDATE_URL)) $errors[] = 'Download URL must be a valid URL.';
+    if ($checksum && !preg_match('/^[a-f0-9]{64}$/', $checksum)) $errors[] = 'SHA-256 checksum must be a 64-character hex string.';
 
     if (empty($errors)) {
         ls_run(
-            "INSERT INTO versions (version, notes, released_at) VALUES (:v, :n, NOW())",
-            [':v' => $version, ':n' => $notes]
+            "INSERT INTO versions (version, notes, download_url, sha256_checksum, released_at) VALUES (:v, :n, :u, :c, NOW())",
+            [':v' => $version, ':n' => $notes, ':u' => $dl_url ?: null, ':c' => $checksum ?: null]
         );
-        flash_set('success', "Version {$version} added to changelog.");
+        flash_set('success', "Version {$version} published." . ($dl_url ? ' Update delivery is live.' : ' Add a download URL to enable auto-update.'));
         header('Location: ' . ls_url('changelog')); exit;
     }
 }
@@ -57,7 +61,15 @@ require __DIR__ . '/../layout/header.php';
                         <span class="badge-active mt-1 d-inline-block">Latest</span>
                         <?php endif; ?>
                     </div>
-                    <div style="font-size:.85rem;color:#374151;line-height:1.7;white-space:pre-wrap"><?= e($v['notes']) ?></div>
+                    <div style="font-size:.85rem;color:#374151;line-height:1.7;white-space:pre-wrap;margin-bottom:.5rem"><?= e($v['notes']) ?></div>
+                    <?php if (!empty($v['download_url'])): ?>
+                    <div style="font-size:.75rem">
+                        <span style="color:#059669;font-weight:600">✓ Auto-update enabled</span>
+                        <span class="text-muted ms-2"><?= e($v['download_url']) ?></span>
+                    </div>
+                    <?php else: ?>
+                    <div style="font-size:.75rem;color:#9ca3af">No download URL — auto-update not available for this version</div>
+                    <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -75,15 +87,31 @@ require __DIR__ . '/../layout/header.php';
                     <label class="form-label">Version Number</label>
                     <input type="text" name="version" class="form-control font-monospace"
                            value="<?= e($_POST['version'] ?? '') ?>"
-                           placeholder="e.g. 1.2.0">
+                           placeholder="e.g. 1.5.0">
                     <div class="form-text">Format: X.Y.Z</div>
                 </div>
-                <div class="mb-4">
+                <div class="mb-3">
                     <label class="form-label">Release Notes</label>
-                    <textarea name="notes" class="form-control" rows="6"
-                              placeholder="What was added, fixed, or changed in this version…"><?= e($_POST['notes'] ?? '') ?></textarea>
+                    <textarea name="notes" class="form-control" rows="5"
+                              placeholder="What was added, fixed, or changed…"><?= e($_POST['notes'] ?? '') ?></textarea>
                 </div>
-                <button type="submit" class="btn btn-brand w-100">Add Version →</button>
+                <hr class="my-3">
+                <p class="text-muted small mb-2">Auto-update delivery (optional — leave blank to skip)</p>
+                <div class="mb-3">
+                    <label class="form-label">Download URL</label>
+                    <input type="url" name="download_url" class="form-control"
+                           value="<?= e($_POST['download_url'] ?? '') ?>"
+                           placeholder="https://github.com/…/v1.5.0.zip">
+                    <div class="form-text">Public ZIP of the release (e.g. GitHub Release asset).</div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">SHA-256 Checksum</label>
+                    <input type="text" name="sha256_checksum" class="form-control font-monospace"
+                           value="<?= e($_POST['sha256_checksum'] ?? '') ?>"
+                           placeholder="64-character hex string">
+                    <div class="form-text">Run: <code>shasum -a 256 autodex.zip</code></div>
+                </div>
+                <button type="submit" class="btn btn-brand w-100">Publish Version →</button>
             </form>
         </div>
     </div>

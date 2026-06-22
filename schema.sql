@@ -72,12 +72,18 @@ INSERT INTO `settings` (`key`, `value`) VALUES
 
 -- ── Version History ───────────────────────────────────────
 CREATE TABLE `versions` (
-    `id`          SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `version`     VARCHAR(20)       NOT NULL,
-    `notes`       TEXT              NOT NULL,
-    `released_at` TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `id`              SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `version`         VARCHAR(20)       NOT NULL,
+    `notes`           TEXT              NOT NULL,
+    `download_url`    VARCHAR(500)          NULL,  -- public ZIP download URL (e.g. GitHub Release)
+    `sha256_checksum` VARCHAR(64)           NULL,  -- SHA256 hex of the ZIP file
+    `released_at`     TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Migration for existing installs: run this once
+-- ALTER TABLE `versions` ADD COLUMN `download_url` VARCHAR(500) NULL AFTER `notes`;
+-- ALTER TABLE `versions` ADD COLUMN `sha256_checksum` VARCHAR(64) NULL AFTER `download_url`;
 
 INSERT INTO `versions` (`version`, `notes`) VALUES
 ('1.0.0', 'Initial release: license management, activation logs, domain binding.'),

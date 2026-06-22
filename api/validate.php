@@ -130,11 +130,23 @@ if (empty($license['activated_domain'])) {
 // ── Return success ────────────────────────────────────────
 $pdo->prepare("UPDATE licenses SET last_check_at = NOW() WHERE id = :id")->execute([':id' => $license['id']]);
 
+// Attach latest version info for in-app updater
+try {
+    $latest_ver = $pdo->query("SELECT * FROM versions ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+} catch (\Throwable $e) {
+    $latest_ver = [];
+}
+
 exit(json_encode([
-    'valid'      => true,
-    'plan'       => $license['plan'] ?? 'standard',
-    'expires_at' => $license['expires_at'],
-    'domain'     => $clean_domain,
+    'valid'           => true,
+    'plan'            => $license['plan'] ?? 'standard',
+    'expires_at'      => $license['expires_at'],
+    'domain'          => $clean_domain,
+    // Update delivery fields — empty strings if not yet published
+    'latest_version'  => $latest_ver['version']         ?? '',
+    'update_url'      => $latest_ver['download_url']     ?? '',
+    'update_checksum' => $latest_ver['sha256_checksum']  ?? '',
+    'changelog'       => $latest_ver['notes']            ?? '',
 ]));
 
 
