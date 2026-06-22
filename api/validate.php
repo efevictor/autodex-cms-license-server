@@ -140,7 +140,7 @@ try {
 // Build the proxy download URL — clients hit the license server, not GitHub directly
 $proxy_url = '';
 if (!empty($latest_ver['download_url'])) {
-    $proxy_url = rtrim(LS_URL, '/') . '/api/download'
+    $proxy_url = rtrim(LS_URL, '/') . '/api/download.php'
         . '?key='     . urlencode($key)
         . '&version=' . urlencode($latest_ver['version'] ?? '');
 }
