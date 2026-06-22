@@ -137,6 +137,14 @@ try {
     $latest_ver = [];
 }
 
+// Build the proxy download URL — clients hit the license server, not GitHub directly
+$proxy_url = '';
+if (!empty($latest_ver['download_url'])) {
+    $proxy_url = rtrim(LS_URL, '/') . '/api/download'
+        . '?key='     . urlencode($key)
+        . '&version=' . urlencode($latest_ver['version'] ?? '');
+}
+
 exit(json_encode([
     'valid'           => true,
     'plan'            => $license['plan'] ?? 'standard',
@@ -144,7 +152,7 @@ exit(json_encode([
     'domain'          => $clean_domain,
     // Update delivery fields — empty strings if not yet published
     'latest_version'  => $latest_ver['version']         ?? '',
-    'update_url'      => $latest_ver['download_url']     ?? '',
+    'update_url'      => $proxy_url,
     'update_checksum' => $latest_ver['sha256_checksum']  ?? '',
     'changelog'       => $latest_ver['notes']            ?? '',
 ]));

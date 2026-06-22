@@ -98,11 +98,14 @@ require __DIR__ . '/../layout/header.php';
                 <hr class="my-3">
                 <p class="text-muted small mb-2">Auto-update delivery (optional — leave blank to skip)</p>
                 <div class="mb-3">
-                    <label class="form-label">Download URL</label>
+                    <label class="form-label">GitHub Zipball URL</label>
                     <input type="url" name="download_url" class="form-control"
                            value="<?= e($_POST['download_url'] ?? '') ?>"
-                           placeholder="https://github.com/…/v1.5.0.zip">
-                    <div class="form-text">Public ZIP of the release (e.g. GitHub Release asset).</div>
+                           placeholder="https://api.github.com/repos/efevictor/autodesk-cms/zipball/v1.5.0">
+                    <div class="form-text">
+                        GitHub API URL for the tagged release.<br>
+                        Format: <code>https://api.github.com/repos/{owner}/{repo}/zipball/{tag}</code>
+                    </div>
                 </div>
                 <div class="mb-4">
                     <label class="form-label">SHA-256 Checksum</label>
