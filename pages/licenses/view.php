@@ -220,6 +220,25 @@ $status_badge  = ['active' => 'badge-active', 'suspended' => 'badge-suspended', 
 
                     <dt class="col-sm-4 text-muted fw-normal">Last Check</dt>
                     <dd class="col-sm-8 text-muted"><?= $license['last_check_at'] ? date('d M Y, H:i', strtotime($license['last_check_at'])) : 'Never' ?></dd>
+
+                    <?php
+                        $installed_ver = $license['cms_version'] ?? '';
+                        $latest_ver    = ls_val("SELECT version FROM versions ORDER BY id DESC LIMIT 1") ?? '';
+                    ?>
+                    <dt class="col-sm-4 text-muted fw-normal">CMS Version</dt>
+                    <dd class="col-sm-8">
+                        <?php if (!$installed_ver): ?>
+                            <span class="text-muted">Unknown — not yet reported</span>
+                        <?php elseif ($latest_ver && $installed_ver === $latest_ver): ?>
+                            <span class="fw-semibold font-monospace"><?= e($installed_ver) ?></span>
+                            <span class="badge-active ms-2" style="font-size:.68rem">Up to date</span>
+                        <?php else: ?>
+                            <span class="fw-semibold font-monospace"><?= e($installed_ver) ?></span>
+                            <?php if ($latest_ver): ?>
+                                <span class="badge-suspended ms-2" style="font-size:.68rem">Outdated — latest is <?= e($latest_ver) ?></span>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </dd>
                 </dl>
             </div>
         </div>
