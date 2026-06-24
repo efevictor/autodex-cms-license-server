@@ -25,6 +25,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ls_run("UPDATE licenses SET activated_domain=NULL, extra_domains=NULL, activated_at=NULL, activations=0 WHERE id=:id", [':id' => $id]);
         _ls_log($id, $license['activated_domain'] ?? '-', $license['purchase_email'], 'domain_released');
         flash_set('success', 'Domain binding cleared. Buyer can now install on a new domain.');
+    } elseif ($action === 'set_domain') {
+        // Normalise: strip protocol, www, path, whitespace, lowercase
+        $newdom = strtolower(trim($_POST['new_domain'] ?? ''));
+        $newdom = preg_replace('#^https?://#', '', $newdom);
+        $newdom = preg_replace('#^www\.#', '', $newdom);
+        $newdom = explode('/', $newdom)[0];
+        if ($newdom === '' || !preg_match('/^[a-z0-9.-]+\.[a-z]{2,}$/', $newdom)) {
+            flash_set('error', 'Enter a valid domain, e.g. example.com (no http://, no www).');
+        } else {
+            $old = $license['activated_domain'] ?? '-';
+            ls_run(
+                "UPDATE licenses SET activated_domain=:d, extra_domains=NULL, activations=1, activated_at=NOW() WHERE id=:id",
+                [':d' => $newdom, ':id' => $id]
+            );
+            _ls_log($id, $newdom, $license['purchase_email'], 'domain_transferred_from_' . $old);
+            flash_set('success', "Domain set to {$newdom}. That install will validate on its next check (or Verify Now).");
+        }
     } elseif ($action === 'refund') {
         ls_run("UPDATE licenses SET status='refunded' WHERE id=:id", [':id' => $id]);
         _ls_log($id, $license['activated_domain'] ?? '-', $license['purchase_email'], 'admin_refunded');
@@ -242,6 +259,26 @@ $status_badge  = ['active' => 'badge-active', 'suspended' => 'badge-suspended', 
                 </form>
                 <?php endif; ?>
             </div>
+        </div>
+
+        <!-- Set / Transfer Domain -->
+        <div class="ls-card mb-4 p-4">
+            <h6 class="fw-bold mb-3">Set / Transfer Domain</h6>
+            <form method="POST" onsubmit="return confirm('Set the bound domain for this license? The previous domain will stop validating.')">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="set_domain">
+                <div class="mb-2">
+                    <label class="form-label small text-muted" for="new_domain">Bound Domain</label>
+                    <input type="text" name="new_domain" id="new_domain" class="form-control form-control-sm"
+                           value="<?= e($license['activated_domain'] ?? '') ?>"
+                           placeholder="example.com">
+                    <div class="form-text small">Enter the domain without <code>http://</code> or <code>www.</code> (e.g. <code>cityautosglobal.com</code>).</div>
+                </div>
+                <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="ph ph-globe-hemisphere-west me-1"></i> Set Domain
+                </button>
+            </form>
+            <p class="text-muted small mb-0 mt-2">Use this to move a license to a new domain (e.g. subdomain → main domain) without phpMyAdmin.</p>
         </div>
 
         <!-- Change Plan -->
