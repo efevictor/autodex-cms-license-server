@@ -28,6 +28,7 @@ CREATE TABLE `licenses` (
     `expires_at`       TIMESTAMP             NULL,   -- NULL = lifetime license
     `activated_at`     TIMESTAMP             NULL,
     `last_check_at`    TIMESTAMP             NULL,
+    `cms_version`      VARCHAR(20)           NULL,   -- installed CMS version reported on last check
     `order_ref`        VARCHAR(100)          NULL,   -- Gumroad/Stripe order ID
     `notes`            TEXT                  NULL,
     `created_at`       TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -81,9 +82,10 @@ CREATE TABLE `versions` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Migration for existing installs: run this once
+-- Migration for existing installs: run these once in phpMyAdmin
 -- ALTER TABLE `versions` ADD COLUMN `download_url` VARCHAR(500) NULL AFTER `notes`;
 -- ALTER TABLE `versions` ADD COLUMN `sha256_checksum` VARCHAR(64) NULL AFTER `download_url`;
+-- ALTER TABLE `licenses` ADD COLUMN `cms_version` VARCHAR(20) NULL AFTER `last_check_at`;
 
 INSERT INTO `versions` (`version`, `notes`) VALUES
 ('1.0.0', 'Initial release: license management, activation logs, domain binding.'),

@@ -29,6 +29,19 @@ $recent_activations = ls_rows("
     LIMIT 8
 ");
 
+// Version distribution across active installs
+$latest_version = ls_val("SELECT version FROM versions ORDER BY id DESC LIMIT 1") ?? '';
+$version_dist   = ls_rows("
+    SELECT
+        COALESCE(NULLIF(cms_version,''), '(never checked in)') AS version,
+        COUNT(*) AS installs
+    FROM licenses
+    WHERE status = 'active' AND activated_domain IS NOT NULL
+    GROUP BY cms_version
+    ORDER BY installs DESC
+");
+$total_active_installs = array_sum(array_column($version_dist, 'installs'));
+
 require __DIR__ . '/../layout/header.php';
 ?>
 
@@ -122,6 +135,62 @@ require __DIR__ . '/../layout/header.php';
                 </div>
                 <?php endforeach; endif; ?>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Version distribution -->
+<div class="row g-4 mt-0">
+    <div class="col-12">
+        <div class="ls-card">
+            <div class="ls-card-hd">
+                <h6>CMS Version Distribution</h6>
+                <?php if ($latest_version): ?>
+                <span class="text-muted small">Latest: <strong><?= e($latest_version) ?></strong></span>
+                <?php endif; ?>
+            </div>
+            <?php if (empty($version_dist)): ?>
+                <p class="text-center text-muted py-4 small">No active installs have checked in yet.</p>
+            <?php else: ?>
+            <div class="table-responsive">
+                <table class="ls-table">
+                    <thead>
+                        <tr><th>CMS Version</th><th>Installs</th><th>Share</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($version_dist as $row):
+                        $ver       = $row['version'];
+                        $count     = (int)$row['installs'];
+                        $pct       = $total_active_installs > 0 ? round($count / $total_active_installs * 100) : 0;
+                        $is_latest = $latest_version && $ver === $latest_version;
+                        $is_null   = $ver === '(never checked in)';
+                    ?>
+                    <tr>
+                        <td class="fw-semibold font-monospace"><?= e($ver) ?></td>
+                        <td><?= number_format($count) ?></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width:100px;background:#e5e7eb;border-radius:4px;height:6px">
+                                    <div style="width:<?= $pct ?>%;background:<?= $is_latest ? '#059669' : ($is_null ? '#9ca3af' : '#f59e0b') ?>;border-radius:4px;height:6px"></div>
+                                </div>
+                                <span class="text-muted small"><?= $pct ?>%</span>
+                            </div>
+                        </td>
+                        <td>
+                            <?php if ($is_null): ?>
+                                <span class="text-muted small">Unknown</span>
+                            <?php elseif ($is_latest): ?>
+                                <span class="badge-active">Up to date</span>
+                            <?php else: ?>
+                                <span class="badge-suspended">Outdated</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

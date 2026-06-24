@@ -22,10 +22,11 @@ if (!is_array($body)) {
     exit(json_encode(['valid' => false, 'message' => 'Invalid request body.']));
 }
 
-$email   = strtolower(trim($body['email']   ?? ''));
-$key     = trim($body['key']     ?? '');
-$domain  = strtolower(trim($body['domain']  ?? ''));
-$product = trim($body['product'] ?? '');
+$email       = strtolower(trim($body['email']       ?? ''));
+$key         = trim($body['key']         ?? '');
+$domain      = strtolower(trim($body['domain']      ?? ''));
+$product     = trim($body['product']     ?? '');
+$cms_version = trim($body['cms_version'] ?? '');
 
 // Basic input validation
 if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($key) < 10 || empty($domain)) {
@@ -128,7 +129,8 @@ if (empty($license['activated_domain'])) {
 }
 
 // ── Return success ────────────────────────────────────────
-$pdo->prepare("UPDATE licenses SET last_check_at = NOW() WHERE id = :id")->execute([':id' => $license['id']]);
+$pdo->prepare("UPDATE licenses SET last_check_at = NOW(), cms_version = :ver WHERE id = :id")
+    ->execute([':ver' => $cms_version ?: null, ':id' => $license['id']]);
 
 // Attach latest version info for in-app updater
 try {

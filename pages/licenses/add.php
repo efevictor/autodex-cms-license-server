@@ -17,21 +17,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $max_dom    = max(1, (int)($_POST['max_domains'] ?? 1));
     $order_ref  = trim($_POST['order_ref'] ?? '');
     $notes      = trim($_POST['notes']     ?? '');
+    $term        = trim($_POST['term'] ?? 'lifetime');
     $expires_raw = trim($_POST['expires_at'] ?? '');
     $custom_key  = trim($_POST['custom_key'] ?? '');
     $domain_raw  = strtolower(trim($_POST['registered_domain'] ?? ''));
     $domain      = $domain_raw ? preg_replace('/^www\./', '', $domain_raw) : null;
 
-    // Normalize expiry date to full datetime string MySQL will accept reliably
+    // Resolve expiry date from term selection
     $expires = null;
-    if ($expires_raw !== '') {
-        $ts = strtotime($expires_raw);
-        if (!$ts || $ts <= time()) {
-            $errors[] = 'Expiry date must be a valid date in the future.';
+    if ($term === 'annual') {
+        $expires = date('Y-m-d 23:59:59', strtotime('+1 year'));
+    } elseif ($term === 'biannual') {
+        $expires = date('Y-m-d 23:59:59', strtotime('+2 years'));
+    } elseif ($term === 'custom') {
+        if ($expires_raw === '') {
+            $errors[] = 'Please select a custom expiry date.';
         } else {
-            $expires = date('Y-m-d 23:59:59', $ts);
+            $ts = strtotime($expires_raw);
+            if (!$ts || $ts <= time()) {
+                $errors[] = 'Custom expiry date must be a valid date in the future.';
+            } else {
+                $expires = date('Y-m-d 23:59:59', $ts);
+            }
         }
     }
+    // lifetime → $expires stays null
 
     if (!$product_id) $errors[] = 'Select a product.';
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email required.';
@@ -156,10 +166,18 @@ require __DIR__ . '/../../layout/header.php';
                         <div class="form-text">1 for Standard, more for Extended/Developer.</div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Expires On</label>
-                        <input type="date" name="expires_at" class="form-control"
+                        <label class="form-label">License Term</label>
+                        <select name="term" id="license_term" class="form-select" onchange="toggleCustomDate(this.value)">
+                            <option value="lifetime"  <?= ($_POST['term'] ?? 'lifetime') === 'lifetime'  ? 'selected' : '' ?>>Lifetime (no expiry)</option>
+                            <option value="annual"    <?= ($_POST['term'] ?? '') === 'annual'    ? 'selected' : '' ?>>Annual (1 year)</option>
+                            <option value="biannual"  <?= ($_POST['term'] ?? '') === 'biannual'  ? 'selected' : '' ?>>Biannual (2 years)</option>
+                            <option value="custom"    <?= ($_POST['term'] ?? '') === 'custom'    ? 'selected' : '' ?>>Custom date…</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6" id="custom_date_wrap" style="display:<?= ($_POST['term'] ?? '') === 'custom' ? 'block' : 'none' ?>">
+                        <label class="form-label">Custom Expiry Date</label>
+                        <input type="date" name="expires_at" id="expires_at" class="form-control"
                                value="<?= e($_POST['expires_at'] ?? '') ?>">
-                        <div class="form-text">Leave blank for a lifetime license.</div>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Registered Domain <span class="text-muted fw-normal">(optional — locks license to this domain immediately)</span></label>
@@ -183,6 +201,12 @@ require __DIR__ . '/../../layout/header.php';
 
                 <button type="submit" class="btn btn-brand w-100">Issue License →</button>
             </form>
+            <script>
+            function toggleCustomDate(val) {
+                document.getElementById('custom_date_wrap').style.display = val === 'custom' ? 'block' : 'none';
+                document.getElementById('expires_at').required = val === 'custom';
+            }
+            </script>
         </div>
     </div>
 
