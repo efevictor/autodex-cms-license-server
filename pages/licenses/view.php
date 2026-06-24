@@ -46,6 +46,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ls_run("UPDATE licenses SET status='refunded' WHERE id=:id", [':id' => $id]);
         _ls_log($id, $license['activated_domain'] ?? '-', $license['purchase_email'], 'admin_refunded');
         flash_set('success', 'License marked as refunded and revoked.');
+    } elseif ($action === 'change_expiry') {
+        $term        = trim($_POST['term'] ?? 'lifetime');
+        $expires_raw = trim($_POST['expires_at'] ?? '');
+        $new_expires = null;
+        $expiry_err  = '';
+
+        if ($term === 'annual') {
+            $new_expires = date('Y-m-d 23:59:59', strtotime('+1 year'));
+        } elseif ($term === 'biannual') {
+            $new_expires = date('Y-m-d 23:59:59', strtotime('+2 years'));
+        } elseif ($term === 'custom') {
+            if ($expires_raw === '') {
+                $expiry_err = 'Please select a custom expiry date.';
+            } else {
+                $ts = strtotime($expires_raw);
+                if (!$ts || $ts <= time()) {
+                    $expiry_err = 'Custom expiry date must be a valid date in the future.';
+                } else {
+                    $new_expires = date('Y-m-d 23:59:59', $ts);
+                }
+            }
+        }
+        // lifetime → $new_expires stays null
+
+        if ($expiry_err) {
+            flash_set('error', $expiry_err);
+        } else {
+            ls_run("UPDATE licenses SET expires_at=:exp WHERE id=:id", [':exp' => $new_expires, ':id' => $id]);
+            $label = $new_expires ? date('d M Y', strtotime($new_expires)) : 'Lifetime';
+            _ls_log($id, $license['activated_domain'] ?? '-', $license['purchase_email'], 'expiry_changed_to_' . ($new_expires ?? 'lifetime'));
+            flash_set('success', "Expiry updated to {$label}.");
+        }
     } elseif ($action === 'update_notes') {
         ls_run("UPDATE licenses SET notes=:n WHERE id=:id", [':n' => trim($_POST['notes'] ?? ''), ':id' => $id]);
         flash_set('success', 'Notes updated.');
@@ -304,6 +336,44 @@ $status_badge  = ['active' => 'badge-active', 'suspended' => 'badge-suspended', 
                     <i class="ph ph-arrows-down-up me-1"></i> Apply Plan Change
                 </button>
             </form>
+        </div>
+
+        <!-- Change Expiry -->
+        <div class="ls-card mb-4 p-4">
+            <h6 class="fw-bold mb-3">Change Expiry</h6>
+            <?php
+                $exp_ts    = $license['expires_at'] ? strtotime($license['expires_at']) : false;
+                $cur_expiry = ($exp_ts && $exp_ts > 0) ? date('d M Y', $exp_ts) : 'Lifetime';
+            ?>
+            <p class="text-muted small mb-3">Current: <strong><?= e($cur_expiry) ?></strong></p>
+            <form method="POST" onsubmit="return confirm('Update expiry for this license?')">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="change_expiry">
+                <div class="mb-2">
+                    <label class="form-label small text-muted">New Term</label>
+                    <select name="term" id="exp_term" class="form-select form-select-sm" onchange="toggleExpCustom(this.value)">
+                        <option value="lifetime">Lifetime (no expiry)</option>
+                        <option value="annual">Annual (1 year from today)</option>
+                        <option value="biannual">Biannual (2 years from today)</option>
+                        <option value="custom">Custom date…</option>
+                    </select>
+                </div>
+                <div id="exp_custom_wrap" class="mb-2" style="display:none">
+                    <label class="form-label small text-muted">Custom Date</label>
+                    <input type="date" name="expires_at" id="exp_date" class="form-control form-control-sm">
+                </div>
+                <button type="submit" class="btn btn-outline-primary btn-sm w-100 mt-1">
+                    <i class="ph ph-calendar me-1"></i> Update Expiry
+                </button>
+            </form>
+            <script>
+            function toggleExpCustom(v) {
+                var w = document.getElementById('exp_custom_wrap');
+                var d = document.getElementById('exp_date');
+                w.style.display = v === 'custom' ? 'block' : 'none';
+                d.required = v === 'custom';
+            }
+            </script>
         </div>
 
         <!-- Notes -->
