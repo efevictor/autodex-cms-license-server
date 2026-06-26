@@ -119,10 +119,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($typed !== $license['license_key']) {
             flash_set('error', 'Confirmation key did not match. License was NOT deleted.');
         } else {
-            $key_copy = $license['license_key'];
-            ls_run("DELETE FROM licenses WHERE id=:id", [':id' => $id]);
-            flash_set('success', "License {$key_copy} has been permanently deleted.");
-            header('Location: ' . ls_url('licenses')); exit;
+            try {
+                $key_copy = $license['license_key'];
+                ls_run("DELETE FROM activation_logs WHERE license_id=:id", [':id' => $id]);
+                ls_run("DELETE FROM licenses WHERE id=:id", [':id' => $id]);
+                flash_set('success', "License {$key_copy} has been permanently deleted.");
+                header('Location: ' . ls_url('licenses')); exit;
+            } catch (\Throwable $e) {
+                flash_set('error', 'Could not delete license: ' . $e->getMessage());
+            }
         }
     }
 
