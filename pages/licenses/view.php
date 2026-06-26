@@ -112,8 +112,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             _ls_log($id, $license['activated_domain'] ?? '-', $license['purchase_email'], "plan_{$direction}_{$old_plan}_to_{$new_plan}");
             flash_set('success', ucfirst($direction) . " plan from " . ucfirst($old_plan) . " to " . ucfirst($new_plan) . "." . ($clear_extras ? ' Extra domain bindings were cleared.' : ''));
         }
-    }
-
     } elseif ($action === 'delete') {
         $typed = trim($_POST['confirm_key'] ?? '');
         if ($typed !== $license['license_key']) {
