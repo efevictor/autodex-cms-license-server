@@ -135,19 +135,26 @@ if (empty($license['activated_domain'])) {
 $pdo->prepare("UPDATE licenses SET last_check_at = NOW(), cms_version = :ver WHERE id = :id")
     ->execute([':ver' => $cms_version ?: null, ':id' => $license['id']]);
 
-// Attach latest version info for in-app updater
+// Attach latest version info for in-app updater (filtered by product)
 try {
-    $latest_ver = $pdo->query("SELECT * FROM versions ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    $vs = $pdo->prepare("SELECT * FROM versions WHERE product_id = :pid ORDER BY id DESC LIMIT 1");
+    $vs->execute([':pid' => $license['product_id']]);
+    $latest_ver = $vs->fetch(PDO::FETCH_ASSOC) ?: [];
 } catch (\Throwable $e) {
     $latest_ver = [];
 }
 
-// Build the proxy download URL — clients hit the license server, not GitHub directly
+// Build a short-lived signed download token — raw license key never appears in the URL
 $proxy_url = '';
 if (!empty($latest_ver['download_url'])) {
+    $payload = base64_encode(json_encode([
+        'lid' => $license['id'],
+        'ver' => $latest_ver['version'] ?? '',
+        'exp' => time() + 3600, // 1-hour window
+    ]));
+    $sig       = hash_hmac('sha256', $payload, LS_DOWNLOAD_SECRET);
     $proxy_url = rtrim(LS_URL, '/') . '/api/download.php'
-        . '?key='     . urlencode($key)
-        . '&version=' . urlencode($latest_ver['version'] ?? '');
+        . '?token=' . urlencode($payload . '.' . $sig);
 }
 
 exit(json_encode([

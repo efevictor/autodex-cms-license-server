@@ -72,24 +72,25 @@ INSERT INTO `settings` (`key`, `value`) VALUES
 ('last_password_change', NOW());
 
 -- ── Version History ───────────────────────────────────────
+-- Each product has its own version rows. When you release an update,
+-- INSERT a row here pointing to the GitHub release ZIP.
 CREATE TABLE `versions` (
     `id`              SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `product_id`      SMALLINT UNSIGNED NOT NULL,
     `version`         VARCHAR(20)       NOT NULL,
     `notes`           TEXT              NOT NULL,
-    `download_url`    VARCHAR(500)          NULL,  -- public ZIP download URL (e.g. GitHub Release)
-    `sha256_checksum` VARCHAR(64)           NULL,  -- SHA256 hex of the ZIP file
+    `download_url`    VARCHAR(500)          NULL,  -- GitHub API zipball URL for this release
+    `sha256_checksum` VARCHAR(64)           NULL,  -- SHA256 hex of the downloaded ZIP
     `released_at`     TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    KEY `idx_ver_product` (`product_id`),
+    CONSTRAINT `fk_ver_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Migration for existing installs: run these once in phpMyAdmin
--- ALTER TABLE `versions` ADD COLUMN `download_url` VARCHAR(500) NULL AFTER `notes`;
--- ALTER TABLE `versions` ADD COLUMN `sha256_checksum` VARCHAR(64) NULL AFTER `download_url`;
--- ALTER TABLE `licenses` ADD COLUMN `cms_version` VARCHAR(20) NULL AFTER `last_check_at`;
-
-INSERT INTO `versions` (`version`, `notes`) VALUES
-('1.0.0', 'Initial release: license management, activation logs, domain binding.'),
-('1.1.0', 'Plan upgrade/downgrade from license view. Admin settings with username/password change and 60-day expiry enforcement. Version history changelog. Clean URLs.');
+-- Seed: license server's own changelog (product_id = 1 = AutoDex; adjust if AutoDex has a different id)
+INSERT INTO `versions` (`product_id`, `version`, `notes`) VALUES
+(1, '1.0.0', 'Initial release: license management, activation logs, domain binding.'),
+(1, '1.1.0', 'Plan upgrade/downgrade from license view. Admin settings with username/password change and 60-day expiry enforcement. Version history changelog. Clean URLs.');
 
 -- ── How to add a license after a sale ────────────────────
 -- Run this whenever someone buys:
@@ -97,21 +98,37 @@ INSERT INTO `versions` (`version`, `notes`) VALUES
 -- INSERT INTO licenses (product_id, license_key, purchase_email, buyer_name, plan, order_ref)
 -- VALUES (1, 'ADSK-XXXX-YYYY-ZZZZ', 'buyer@email.com', 'John Doe', 'standard', 'GUM-12345');
 --
--- Generate the key with: php -r "echo 'ADSK-' . strtoupper(bin2hex(random_bytes(3))) . '-' . strtoupper(bin2hex(random_bytes(3))) . '-' . strtoupper(bin2hex(random_bytes(3)));"
+-- Generate key: php -r "echo 'RDSK-'.strtoupper(bin2hex(random_bytes(3))).'-'.strtoupper(bin2hex(random_bytes(3))).'-'.strtoupper(bin2hex(random_bytes(3)));"
 
--- ── Migration: Multi-product support for ResolveDesk ─────
--- Run these ALTER statements once on existing installations:
+-- ── How to publish a new ResolveDesk release ─────────────
+-- 1. Create the GitHub release and note the tag (e.g. v1.1.0)
+-- 2. Get the zipball URL: https://api.github.com/repos/efevictor/resolvedesk/zipball/v1.1.0
+-- 3. Download the ZIP, compute: sha256sum resolvedesk.zip
+-- 4. Insert:
+--
+-- INSERT INTO versions (product_id, version, notes, download_url, sha256_checksum)
+-- VALUES (
+--   (SELECT id FROM products WHERE slug='resolvedesk'),
+--   '1.1.0',
+--   'Bug fixes and improvements.\n- Fixed X\n- Improved Y',
+--   'https://api.github.com/repos/efevictor/resolvedesk/zipball/v1.1.0',
+--   'abc123...sha256hex'
+-- );
 
--- Step 1: Add product_id to versions table (so versions are per-product)
+-- ── Migration for EXISTING live servers ───────────────────
+-- Run these once in phpMyAdmin if you already have the database set up:
+
+-- Step 1: Add product_id to versions (make existing rows belong to AutoDex = product 1)
 -- ALTER TABLE `versions` ADD COLUMN `product_id` SMALLINT UNSIGNED NULL AFTER `id`;
--- ALTER TABLE `versions` ADD CONSTRAINT `fk_ver_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`);
 -- UPDATE `versions` SET `product_id` = 1 WHERE `product_id` IS NULL;
 -- ALTER TABLE `versions` MODIFY COLUMN `product_id` SMALLINT UNSIGNED NOT NULL;
+-- ALTER TABLE `versions` ADD CONSTRAINT `fk_ver_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`);
+-- ALTER TABLE `versions` ADD KEY `idx_ver_product` (`product_id`);
 
--- Step 2: Add ResolveDesk product
--- INSERT INTO `products` (`name`, `slug`, `price`) VALUES ('ResolveDesk', 'resolvedesk', 149.00);
+-- Step 2: Add ResolveDesk product (skip if already done)
+-- INSERT IGNORE INTO `products` (`name`, `slug`, `price`) VALUES ('ResolveDesk', 'resolvedesk', 149.00);
 
--- Step 3: Add key_prefix to products table (for key generation)
+-- Step 3: Add key_prefix to products (skip if column already exists)
 -- ALTER TABLE `products` ADD COLUMN `key_prefix` VARCHAR(8) NOT NULL DEFAULT 'ADSK' AFTER `slug`;
 -- UPDATE `products` SET `key_prefix` = 'ADSK' WHERE `slug` = 'autodex';
 -- UPDATE `products` SET `key_prefix` = 'RDSK' WHERE `slug` = 'resolvedesk';
