@@ -107,6 +107,8 @@ function ls_url(string $page = '', array $params = []): string
         $path = 'licenses/' . $id;
     } elseif ($page === 'licenses.add') {
         $path = 'licenses/add';
+    } elseif ($page === 'verify_otp') {
+        $path = 'verify-otp';
     } else {
         $path = $page; // dashboard, login, logout, licenses, settings, changelog
     }
@@ -124,6 +126,19 @@ function flash_get(): ?array
 {
     if (!empty($_SESSION['ls_flash'])) { $f = $_SESSION['ls_flash']; unset($_SESSION['ls_flash']); return $f; }
     return null;
+}
+
+// ── Mail helper ───────────────────────────────────────────
+function ls_send_mail(string $to, string $subject, string $html): bool
+{
+    $from    = defined('LS_MAIL_FROM') ? LS_MAIL_FROM : 'noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+    $headers = implode("\r\n", [
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=UTF-8',
+        'From: AutoDex License Server <' . $from . '>',
+        'X-Mailer: PHP/' . PHP_VERSION,
+    ]);
+    return @mail($to, $subject, $html, $headers);
 }
 
 // ── Key generator ─────────────────────────────────────────

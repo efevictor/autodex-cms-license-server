@@ -114,6 +114,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    } elseif ($action === 'delete') {
+        $typed = trim($_POST['confirm_key'] ?? '');
+        if ($typed !== $license['license_key']) {
+            flash_set('error', 'Confirmation key did not match. License was NOT deleted.');
+        } else {
+            $key_copy = $license['license_key'];
+            ls_run("DELETE FROM licenses WHERE id=:id", [':id' => $id]);
+            flash_set('success', "License {$key_copy} has been permanently deleted.");
+            header('Location: ' . ls_url('licenses')); exit;
+        }
+    }
+
     header('Location: ' . ls_url('licenses.view', ['id' => $id])); exit;
 }
 
@@ -393,6 +405,23 @@ $status_badge  = ['active' => 'badge-active', 'suspended' => 'badge-suspended', 
                 d.required = v === 'custom';
             }
             </script>
+        </div>
+
+        <!-- Delete License -->
+        <div class="ls-card mb-4 p-4" style="border:1px solid #fee2e2">
+            <h6 class="fw-bold mb-1" style="color:#dc2626">Delete License</h6>
+            <p class="text-muted small mb-3">This is permanent and cannot be undone. Type the license key below to confirm.</p>
+            <form method="POST" onsubmit="return document.getElementById('del_key').value === '<?= e($license['license_key']) ?>' || (alert('Key does not match.') && false)">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="delete">
+                <div class="mb-2">
+                    <input type="text" id="del_key" name="confirm_key" class="form-control form-control-sm font-monospace"
+                           placeholder="<?= e($license['license_key']) ?>" autocomplete="off">
+                </div>
+                <button type="submit" class="btn btn-sm w-100" style="background:#dc2626;color:#fff;border-color:#dc2626">
+                    <i class="ph ph-trash me-1"></i> Permanently Delete
+                </button>
+            </form>
         </div>
 
         <!-- Notes -->

@@ -10,6 +10,7 @@ Options -Indexes
     RewriteEngine On
     RewriteBase /
 
+    RewriteRule ^autodesk-license-server/verify-otp$          autodesk-license-server/index.php?p=verify_otp [L,QSA]
     RewriteRule ^autodesk-license-server/login$              autodesk-license-server/index.php?p=login [L,QSA]
     RewriteRule ^autodesk-license-server/logout$             autodesk-license-server/index.php?p=logout [L,QSA]
     RewriteRule ^autodesk-license-server/dashboard$          autodesk-license-server/index.php?p=dashboard [L,QSA]
@@ -22,6 +23,7 @@ Options -Indexes
     RewriteRule ^api/validate$       api/validate.php [L,QSA]
     RewriteRule ^api/download$       api/download.php [L,QSA]
 
+    RewriteRule ^verify-otp$          index.php?p=verify_otp [L,QSA]
     RewriteRule ^login$              index.php?p=login [L,QSA]
     RewriteRule ^logout$             index.php?p=logout [L,QSA]
     RewriteRule ^dashboard$          index.php?p=dashboard [L,QSA]

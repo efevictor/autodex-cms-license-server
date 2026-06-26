@@ -12,10 +12,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $db_user = ls_setting('admin_username', LS_ADMIN_USER);
     $db_hash = ls_setting('admin_pass_hash', LS_ADMIN_PASS_HASH);
     if ($user === $db_user && password_verify($pass, $db_hash)) {
-        $_SESSION['ls_admin'] = $user;
-        unset($_SESSION['ls_expiry_checked'], $_SESSION['ls_pass_expired']);
+        // Password correct — generate and send OTP
+        $otp = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $_SESSION['ls_pending_auth'] = $user;
+        $_SESSION['ls_otp']          = [
+            'code'     => password_hash($otp, PASSWORD_BCRYPT),
+            'expires'  => time() + 600,
+            'attempts' => 0,
+        ];
         session_regenerate_id(true);
-        header('Location: ' . ls_url('dashboard')); exit;
+
+        $admin_email = defined('LS_ADMIN_EMAIL') ? LS_ADMIN_EMAIL : '';
+        if ($admin_email) {
+            $body = '<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f5f5f5;padding:40px 0">
+                <div style="max-width:420px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,.08)">
+                    <div style="font-size:1.4rem;font-weight:800;margin-bottom:4px">Auto<span style="color:#d00000">Dex</span></div>
+                    <div style="color:#6b7280;font-size:.85rem;margin-bottom:28px">License Server — Two-Factor Authentication</div>
+                    <p style="color:#374151;margin-bottom:8px">Your one-time login code is:</p>
+                    <div style="font-size:2.5rem;font-weight:800;letter-spacing:10px;color:#000;background:#f3f4f6;border-radius:8px;padding:18px 0;text-align:center;margin-bottom:20px">' . e($otp) . '</div>
+                    <p style="color:#6b7280;font-size:.82rem;margin:0">This code expires in <strong>10 minutes</strong>. If you did not attempt to log in, your password may be compromised — change it immediately.</p>
+                </div>
+            </body></html>';
+            ls_send_mail($admin_email, 'AutoDex Login Code: ' . $otp, $body);
+        }
+
+        header('Location: ' . ls_url('verify_otp')); exit;
     }
     $error = 'Incorrect username or password.';
 }

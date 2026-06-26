@@ -23,3 +23,7 @@ define('LS_SESSION', 'ls_admin_sess');
 // Base path for URLs — empty on production (root domain), set to subfolder for local dev
 // e.g. '' for license.evodesignco.com, '/autodesk-license-server' for localhost
 define('LS_BASE', '');
+
+// 2FA — 6-digit OTP is emailed here after every successful password login
+define('LS_ADMIN_EMAIL', 'you@yourdomain.com');
+define('LS_MAIL_FROM',   'noreply@license.evodesignco.com'); // must be valid on your mail server

@@ -126,9 +126,13 @@ require __DIR__ . '/../../layout/header.php';
                     <?php $exp_ts = $l['expires_at'] ? strtotime($l['expires_at']) : false; ?>
                     <td class="small text-muted"><?= ($exp_ts && $exp_ts > 0) ? date('d M Y', $exp_ts) : 'Lifetime' ?></td>
                     <td class="small text-muted"><?= date('d M Y', strtotime($l['created_at'])) ?></td>
-                    <td>
+                    <td class="d-flex gap-1">
                         <a href="<?= ls_url('licenses.view', ['id' => $l['id']]) ?>"
                            class="btn btn-outline-secondary btn-sm">View</a>
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                onclick="openDeleteModal('<?= e($l['license_key']) ?>', <?= $l['id'] ?>)">
+                            <i class="ph ph-trash"></i>
+                        </button>
                     </td>
                 </tr>
             <?php endforeach; endif; ?>
@@ -148,5 +152,46 @@ require __DIR__ . '/../../layout/header.php';
     </div>
     <?php endif; ?>
 </div>
+
+<!-- Delete confirmation modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:12px;border:none">
+            <div class="modal-body p-4">
+                <h6 class="fw-bold mb-1" style="color:#dc2626">Delete License</h6>
+                <p class="text-muted small mb-3">This cannot be undone. Type the full license key to confirm.</p>
+                <p class="font-monospace small fw-bold mb-3" id="del_modal_key" style="background:#f3f4f6;padding:8px 12px;border-radius:6px"></p>
+                <form id="deleteForm" method="POST">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="delete">
+                    <div class="mb-3">
+                        <input type="text" name="confirm_key" id="del_modal_input"
+                               class="form-control font-monospace" placeholder="Type the key above…" autocomplete="off">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary flex-fill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="del_modal_btn" class="btn flex-fill" style="background:#dc2626;color:#fff" disabled>
+                            Delete Permanently
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openDeleteModal(key, id) {
+    document.getElementById('del_modal_key').textContent = key;
+    document.getElementById('deleteForm').action = '<?= ls_url('licenses.view', ['id' => 0]) ?>'.replace('/0', '/' + id);
+    document.getElementById('del_modal_input').value = '';
+    document.getElementById('del_modal_btn').disabled = true;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+document.getElementById('del_modal_input').addEventListener('input', function() {
+    var expected = document.getElementById('del_modal_key').textContent.trim();
+    document.getElementById('del_modal_btn').disabled = this.value !== expected;
+});
+</script>
 
 <?php require __DIR__ . '/../../layout/footer.php'; ?>

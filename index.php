@@ -4,7 +4,8 @@ require_once __DIR__ . '/bootstrap.php';
 $page = trim($_GET['p'] ?? 'dashboard');
 
 // Public pages
-if ($page === 'login')  { require __DIR__ . '/pages/login.php';  exit; }
+if ($page === 'login')      { require __DIR__ . '/pages/login.php';      exit; }
+if ($page === 'verify_otp') { require __DIR__ . '/pages/verify_otp.php'; exit; }
 if ($page === 'logout') {
     session_destroy();
     header('Location: index.php?p=login');
