@@ -19,6 +19,9 @@ Options -Indexes
     RewriteRule ^autodesk-license-server/settings$           autodesk-license-server/index.php?p=settings [L,QSA]
     RewriteRule ^autodesk-license-server/changelog$          autodesk-license-server/index.php?p=changelog [L,QSA]
 
+    RewriteRule ^api/validate$       api/validate.php [L,QSA]
+    RewriteRule ^api/download$       api/download.php [L,QSA]
+
     RewriteRule ^login$              index.php?p=login [L,QSA]
     RewriteRule ^logout$             index.php?p=logout [L,QSA]
     RewriteRule ^dashboard$          index.php?p=dashboard [L,QSA]
