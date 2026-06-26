@@ -127,10 +127,11 @@ function flash_get(): ?array
 }
 
 // ── Key generator ─────────────────────────────────────────
-function generate_license_key(): string
+function generate_license_key(string $prefix = 'ADSK'): string
 {
     $seg = fn() => strtoupper(bin2hex(random_bytes(3)));
-    return "ADSK-{$seg()}-{$seg()}-{$seg()}";
+    $pfx = strtoupper(preg_replace('/[^A-Z0-9]/', '', $prefix)) ?: 'ADSK';
+    return "{$pfx}-{$seg()}-{$seg()}-{$seg()}";
 }
 
 // ── CSRF ──────────────────────────────────────────────────

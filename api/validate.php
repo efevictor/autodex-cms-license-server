@@ -1,4 +1,7 @@
 <?php
+// Multi-product: validates any product in the `products` table.
+// Client must pass 'product' => slug (e.g. 'resolvedesk', 'autodex').
+
 /**
  * AutoDex — Dealership CMS License Validation API
  * Host this on YOUR server at: https://licenses.yourproduct.com/api/validate

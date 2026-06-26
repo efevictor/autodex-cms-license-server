@@ -21,7 +21,7 @@ if (!$key || !$version) {
 
 // ── Validate license ──────────────────────────────────────
 $license = ls_row(
-    "SELECT * FROM licenses WHERE license_key = :k AND status = 'active' LIMIT 1",
+    "SELECT l.*, p.slug AS product_slug FROM licenses l JOIN products p ON p.id = l.product_id WHERE l.license_key = :k AND l.status = 'active' LIMIT 1",
     [':k' => $key]
 );
 
@@ -36,6 +36,8 @@ if ($license['expires_at'] && strtotime($license['expires_at']) < time()) {
 }
 
 // ── Look up version ───────────────────────────────────────
+// After migration: filter versions by product_id
+// $ver = ls_row("SELECT * FROM versions WHERE version = :v AND product_id = :pid LIMIT 1", [':v' => $version, ':pid' => $license['product_id']]);
 $ver = ls_row(
     "SELECT * FROM versions WHERE version = :v LIMIT 1",
     [':v' => $version]
@@ -83,7 +85,8 @@ if (!$handle) {
 }
 
 // ── Stream ZIP to client ──────────────────────────────────
-$filename = 'autodex-' . preg_replace('/[^a-z0-9.\-]/i', '', $version) . '.zip';
+$product_slug = $license['product_slug'] ?? 'product';
+$filename = $product_slug . '-' . preg_replace('/[^a-z0-9.\-]/i', '', $version) . '.zip';
 
 header('Content-Type: application/zip');
 header('Content-Disposition: attachment; filename="' . $filename . '"');

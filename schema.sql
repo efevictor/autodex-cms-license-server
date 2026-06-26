@@ -98,3 +98,20 @@ INSERT INTO `versions` (`version`, `notes`) VALUES
 -- VALUES (1, 'ADSK-XXXX-YYYY-ZZZZ', 'buyer@email.com', 'John Doe', 'standard', 'GUM-12345');
 --
 -- Generate the key with: php -r "echo 'ADSK-' . strtoupper(bin2hex(random_bytes(3))) . '-' . strtoupper(bin2hex(random_bytes(3))) . '-' . strtoupper(bin2hex(random_bytes(3)));"
+
+-- ── Migration: Multi-product support for ResolveDesk ─────
+-- Run these ALTER statements once on existing installations:
+
+-- Step 1: Add product_id to versions table (so versions are per-product)
+-- ALTER TABLE `versions` ADD COLUMN `product_id` SMALLINT UNSIGNED NULL AFTER `id`;
+-- ALTER TABLE `versions` ADD CONSTRAINT `fk_ver_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`);
+-- UPDATE `versions` SET `product_id` = 1 WHERE `product_id` IS NULL;
+-- ALTER TABLE `versions` MODIFY COLUMN `product_id` SMALLINT UNSIGNED NOT NULL;
+
+-- Step 2: Add ResolveDesk product
+-- INSERT INTO `products` (`name`, `slug`, `price`) VALUES ('ResolveDesk', 'resolvedesk', 149.00);
+
+-- Step 3: Add key_prefix to products table (for key generation)
+-- ALTER TABLE `products` ADD COLUMN `key_prefix` VARCHAR(8) NOT NULL DEFAULT 'ADSK' AFTER `slug`;
+-- UPDATE `products` SET `key_prefix` = 'ADSK' WHERE `slug` = 'autodex';
+-- UPDATE `products` SET `key_prefix` = 'RDSK' WHERE `slug` = 'resolvedesk';

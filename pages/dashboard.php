@@ -13,6 +13,13 @@ $stats = [
 
 $revenue = ls_val("SELECT SUM(p.price) FROM licenses l JOIN products p ON p.id = l.product_id WHERE l.status != 'refunded'") ?? 0;
 
+$products_list = ls_rows("SELECT p.*,
+    COUNT(l.id) AS total_licenses,
+    SUM(CASE WHEN l.status='active' THEN 1 ELSE 0 END) AS active_count,
+    SUM(CASE WHEN l.activated_domain IS NOT NULL AND l.status='active' THEN 1 ELSE 0 END) AS activated_count
+    FROM products p LEFT JOIN licenses l ON l.product_id = p.id
+    GROUP BY p.id ORDER BY p.name");
+
 $recent_licenses = ls_rows("
     SELECT l.*, p.name AS product_name
     FROM licenses l
@@ -142,6 +149,24 @@ require __DIR__ . '/../layout/header.php';
             </div>
         </div>
     </div>
+</div>
+
+<!-- Product breakdown -->
+<div class="ls-card mb-4">
+    <div class="ls-card-header">Products</div>
+    <table class="ls-table">
+        <thead><tr><th>Product</th><th>Total</th><th>Active</th><th>Activated</th></tr></thead>
+        <tbody>
+        <?php foreach ($products_list as $prod): ?>
+        <tr>
+            <td><strong><?= e($prod['name']) ?></strong><br><small class="text-muted"><?= e($prod['slug']) ?></small></td>
+            <td><?= number_format($prod['total_licenses']) ?></td>
+            <td><?= number_format($prod['active_count']) ?></td>
+            <td><?= number_format($prod['activated_count']) ?></td>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
 </div>
 
 <!-- Version distribution -->

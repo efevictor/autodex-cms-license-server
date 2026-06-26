@@ -48,11 +48,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!in_array($plan, ['standard','extended','developer'], true)) $errors[] = 'Invalid plan.';
 
     if (empty($errors)) {
-        $key = $custom_key ?: generate_license_key();
+        // Get product prefix for key generation (falls back to 'ADSK' for legacy products)
+        try {
+            $product_prefix = ls_val(
+                "SELECT COALESCE(NULLIF(key_prefix,''), 'ADSK') FROM products WHERE id = :pid",
+                [':pid' => $product_id]
+            ) ?? 'ADSK';
+        } catch (\Throwable $e) {
+            $product_prefix = 'ADSK';
+        }
+
+        $key = $custom_key ?: generate_license_key($product_prefix);
 
         // Ensure key is unique
         while (ls_val("SELECT id FROM licenses WHERE license_key = :k", [':k' => $key])) {
-            $key = generate_license_key();
+            $key = generate_license_key($product_prefix);
         }
 
         try {
