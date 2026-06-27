@@ -45,8 +45,20 @@ if (!preg_match('/^\d+\.\d+(\.\d+)?$/', $version)) {
     exit(json_encode(['ok' => false, 'message' => 'Invalid version format.']));
 }
 
-// ── Check for duplicate ───────────────────────────────────
-$existing = ls_val("SELECT id FROM versions WHERE version = :v", [':v' => $version]);
+// ── Resolve product (multi-product aware) ─────────────────
+// versions.product_id is NOT NULL, so every version must belong to a product.
+$product_slug = trim($body['product'] ?? 'autodex');
+$product_id   = ls_val("SELECT id FROM products WHERE slug = :s", [':s' => $product_slug]);
+if (!$product_id) {
+    http_response_code(422);
+    exit(json_encode(['ok' => false, 'message' => "Unknown product '{$product_slug}'."]));
+}
+
+// ── Check for duplicate (scoped to this product) ──────────
+$existing = ls_val(
+    "SELECT id FROM versions WHERE product_id = :pid AND version = :v",
+    [':pid' => $product_id, ':v' => $version]
+);
 if ($existing) {
     http_response_code(409);
     exit(json_encode(['ok' => false, 'message' => "Version {$version} already exists."]));
@@ -54,9 +66,9 @@ if ($existing) {
 
 // ── Insert ────────────────────────────────────────────────
 ls_run(
-    "INSERT INTO versions (version, notes, download_url, sha256_checksum, released_at)
-     VALUES (:v, :n, :u, :c, NOW())",
-    [':v' => $version, ':n' => $notes, ':u' => $dl_url ?: null, ':c' => $checksum ?: null]
+    "INSERT INTO versions (product_id, version, notes, download_url, sha256_checksum, released_at)
+     VALUES (:pid, :v, :n, :u, :c, NOW())",
+    [':pid' => $product_id, ':v' => $version, ':n' => $notes, ':u' => $dl_url ?: null, ':c' => $checksum ?: null]
 );
 
 exit(json_encode([
